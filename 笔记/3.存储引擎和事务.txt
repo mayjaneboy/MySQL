@@ -1,0 +1,357 @@
+[TOC]
+
+
+
+## 1、存储引擎
+
+### 1.1、什么是存储引擎
+
+​	存储引擎是MySQL中特有的一个术语，其它数据库中没有。（Oracle中有，但是不叫这个名字）。实际上存储引擎是一个表存储/组织数据的方式。不同的存储引擎，表存储数据的方式不同。
+
+### 1.2、给表添加/指定“存储引擎”
+
+	show create table t_student;可以查看建表时的语句。
+	| t_student | CREATE TABLE `t_student` (
+	  `no` int NOT NULL AUTO_INCREMENT,
+	  `name` varchar(255) DEFAULT NULL,
+	  `cno` int DEFAULT NULL,
+	  PRIMARY KEY (`no`),
+	  KEY `cno` (`cno`),
+	  CONSTRAINT `t_student_ibfk_1` FOREIGN KEY (`cno`) REFERENCES `t_class` (`classno`)
+	) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4
+	COLLATE=utf8mb4_0900_ai_ci |
+	ENGINE就代表存储引擎，默认为InnoDB;charset代表字符编码方式，默认为utf8
+	可以在建表的时候给表指定存储引擎。在最后")"的右边使用：
+		ENGINE来指定存储引擎。 CHARSET来指定这张表的字符编码方式。
+		
+	建表时指定存储引擎，以及字符编码方式。
+	create table t_product(
+		id int primary key,
+		name varchar(255)
+	)engine=InnoDB default charset=gbk;
+
+### 1.3、mysql支持哪些存储引擎
+
+```
+select version();
++-----------+
+| version() |
++-----------+
+| 8.0.39    |
++-----------+
+show engines\G
+*************************** 1. row ***************************
+      Engine: MEMORY
+     Support: YES
+     Comment: Hash based, stored in memory, useful for temporary tables
+Transactions: NO
+          XA: NO
+  Savepoints: NO
+*************************** 2. row ***************************
+      Engine: MRG_MYISAM
+     Support: YES
+     Comment: Collection of identical MyISAM tables
+Transactions: NO
+          XA: NO
+  Savepoints: NO
+*************************** 3. row ***************************
+      Engine: CSV
+     Support: YES
+     Comment: CSV storage engine
+Transactions: NO
+          XA: NO
+  Savepoints: NO
+*************************** 4. row ***************************
+      Engine: FEDERATED
+     Support: NO
+     Comment: Federated MySQL storage engine
+Transactions: NULL
+          XA: NULL
+  Savepoints: NULL
+*************************** 5. row ***************************
+      Engine: PERFORMANCE_SCHEMA
+     Support: YES
+     Comment: Performance Schema
+Transactions: NO
+          XA: NO
+  Savepoints: NO
+*************************** 6. row ***************************
+      Engine: MyISAM
+     Support: YES
+     Comment: MyISAM storage engine
+Transactions: NO
+          XA: NO
+  Savepoints: NO
+*************************** 7. row ***************************
+      Engine: InnoDB
+     Support: DEFAULT
+     Comment: Supports transactions, row-level locking, and foreign keys
+Transactions: YES
+          XA: YES
+  Savepoints: YES
+*************************** 8. row ***************************
+      Engine: ndbinfo
+     Support: NO
+     Comment: MySQL Cluster system information storage engine
+Transactions: NULL
+          XA: NULL
+  Savepoints: NULL
+*************************** 9. row ***************************
+      Engine: BLACKHOLE
+     Support: YES
+     Comment: /dev/null storage engine (anything you write to it disappears)
+Transactions: NO
+          XA: NO
+  Savepoints: NO
+*************************** 10. row ***************************
+      Engine: ARCHIVE
+     Support: YES
+     Comment: Archive storage engine
+Transactions: NO
+          XA: NO
+  Savepoints: NO
+*************************** 11. row ***************************
+      Engine: ndbcluster
+     Support: NO
+     Comment: Clustered, fault-tolerant tables
+Transactions: NULL
+          XA: NULL
+  Savepoints: NULL
+11 rows in set (0.00 sec)
+mysql支持九大存储引擎，。版本不同支持情况不同。
+```
+
+### 1.4、mysql常用的存储引擎
+
+#### 1.4.1、MyISAM存储引擎
+
+它管理的表使用三个文件表示每个表：
+
+```
+格式文件 — 存储表结构的定义（mytable.frm）desc tablename；查看表的结构
+数据文件 — 存储表行的内容（mytable.MYD）  select * from tablename;查看表的数据
+索引文件 — 存储表上索引（mytable.MYI）索引是一本书的目录，缩小扫描范围，提高查询效率
+对于一张表来说，只要是主键或者加有unique约束的字段会自动创建索引。
+```
+
+	MyISAM存储引擎特点：
+		可被转换为压缩、只读表来节省空间
+		MyISAM不支持事务机制，安全性低。
+
+#### 1.4.2、InnoDB存储引擎
+
+mysql默认的存储引擎，支持事务，支持数据库崩溃后自动恢复机制。最主要的特点：非常安全。
+
+	它管理的表具有下列主要特征：
+		– 每个 InnoDB 表在数据库目录中以.frm 格式文件表示
+		– InnoDB表空间tablespace被用于存储表的内容（表空间是一个逻辑名称，存储数据+索引）
+		– 提供一组用来记录事务性活动的日志文件
+		– 用 COMMIT(提交)、SAVEPOINT 及ROLLBACK(回滚)支持事务处理
+		– 提供全 ACID 兼容
+		– 在 MySQL 服务器崩溃后提供自动恢复
+		– 多版本（MVCC）和行级锁定
+		– 支持外键及引用的完整性，包括级联删除和更新
+	InnoDB最大的特点就是支持事务，以保证数据的安全。效率不是很高，并且也不能压缩，不能转换为只读，不能很好的节省存储空间。
+
+#### 1.4.3、MEMORY存储引擎
+
+使用 MEMORY 存储引擎的表，其数据存储在内存中，且行的长度固定，这两个特点使得 MEMORY 存储引擎非常快。
+
+	MEMORY 存储引擎管理的表具有下列特征：
+		– 在数据库目录内，每个表均以.frm 格式的文件表示。
+		– 表数据及索引被存储在内存中。（目的就是快，查询快！）
+		– 表级锁机制。
+		– 不能包含 TEXT 或 BLOB 字段。
+	
+	MEMORY引擎优点：查询效率是最高的。不需要和硬盘交互。
+	MEMORY引擎缺点：不安全，关机之后数据消失。因为数据和索引都是在内存当中。
+
+## 2、事务
+
+### 2.1、什么是事务
+
+一个事务其实就是一个完整的业务逻辑。是一个最小的工作单元。不可再分。
+
+	什么是一个完整的业务逻辑？
+		假设转账，从A账户向B账户中转账10000.
+		将A账户的钱减去10000（update语句）
+		将B账户的钱加上10000（update语句）
+		这就是一个完整的业务逻辑。
+	
+	以上的操作是一个最小的工作单元，要么同时成功，要么同时失败，不可再分。
+	这两个update语句要求必须同时成功或者同时失败，这样才能保证钱是正确的。
+
+### 2.2、事务与DML语句
+
+只有DML语句insert、delete、update才会有事务这一说，其它语句和事务无关
+
+假设所有的业务，只要一条DML语句就能完成，还有必要存在事务机制吗？正是因为做某件事的时候，需要多条DML语句共同联合起来才能完成，所以才需要事务的存在。
+
+	本质上，一个事务其实就是多条DML语句同时成功，或者同时失败！
+	
+	事务是怎么做到多条DML语句同时成功或同时失败的呢？
+	
+	InnoDB存储引擎：提供一组用来记录事务性活动的日志文件
+	事务开启了：
+	insert
+	insert
+	insert
+	delete
+	update
+	update
+	update
+	事务结束了！
+	在事务的执行过程中，每一条DML的操作都会记录到“事务性活动的日志文件”中。
+	
+	在事务的执行过程中，我们可以提交事务，也可以回滚事务。
+	提交事务？
+		清空事务性活动的日志文件，将数据全部彻底持久化到数据库表中。
+		提交事务标志着一种全部成功的结束。
+	回滚事务？
+		将之前所有的DML操作全部撤销，并且清空事务性活动的日志文件
+		回滚事务标志着一种全部失败的结束。
+
+### 2.3、提交commit、回滚rollback
+
+事务对应的英语单词是：transaction
+
+	mysql默认情况下是支持自动提交事务的。每执行一条DML语句，则提交一次！
+	这种自动提交实际上是不符合开发习惯，因为一个业务通常是需要多条DML语句共同执行才能完成的，为了保证数据的安全，必须要求同时成功之后再提交，所以不能执行一条就提交一条。
+	
+	怎么将mysql的自动提交机制关闭掉呢？
+		执行这个命令：start transaction;
+	
+	演示
+	-------------------------------------回滚-----------------------------------
+		mysql> use bjpowernode;
+		Database changed
+		mysql> select * from dept_bak;
+		Empty set (0.00 sec)
+	
+		mysql> start transaction;
+		Query OK, 0 rows affected (0.00 sec)
+	
+		mysql> insert into dept_bak values(10,'abc', 'tj');
+		Query OK, 1 row affected (0.00 sec)
+		mysql> insert into dept_bak values(10,'abc', 'tj');
+		Query OK, 1 row affected (0.00 sec)
+		mysql> select * from dept_bak;
+		+--------+-------+------+
+		| DEPTNO | DNAME | LOC  |
+		+--------+-------+------+
+		|     10 | abc   | tj   |
+		|     10 | abc   | tj   |
+		+--------+-------+------+
+		2 rows in set (0.00 sec)
+	
+		mysql> rollback;
+		Query OK, 0 rows affected (0.00 sec)
+		mysql> select * from dept_bak;
+		Empty set (0.00 sec)
+
+
+	--------------------------------------提交------------------------------------
+		mysql> use bjpowernode;
+		Database changed
+		mysql> select * from dept_bak;
+		+--------+-------+------+
+		| DEPTNO | DNAME | LOC  |
+		+--------+-------+------+
+		|     10 | abc   | bj   |
+		+--------+-------+------+
+		1 row in set (0.00 sec)
+	
+		mysql> start transaction;
+		Query OK, 0 rows affected (0.00 sec)
+	
+		mysql> insert into dept_bak values(20,'abc')
+		Query OK, 1 row affected (0.00 sec)
+		mysql> insert into dept_bak values(20,'abc')
+		Query OK, 1 row affected (0.00 sec)
+		mysql> insert into dept_bak values(20,'abc')
+		Query OK, 1 row affected (0.00 sec)
+	
+		mysql> commit;
+		Query OK, 0 rows affected (0.01 sec)
+	
+		mysql> select * from dept_bak;
+		+--------+-------+------+
+		| DEPTNO | DNAME | LOC  |
+		+--------+-------+------+
+		|     10 | abc   | bj   |
+		|     20 | abc   | tj   |
+		|     20 | abc   | tj   |
+		|     20 | abc   | tj   |
+		+--------+-------+------+
+		4 rows in set (0.00 sec)
+	
+		mysql> rollback;
+		Query OK, 0 rows affected (0.00 sec)
+		mysql> select * from dept_bak;
+		+--------+-------+------+
+		| DEPTNO | DNAME | LOC  |
+		+--------+-------+------+
+		|     10 | abc   | bj   |
+		|     20 | abc   | tj   |
+		|     20 | abc   | tj   |
+		|     20 | abc   | tj   |
+		+--------+-------+------+
+		4 rows in set (0.00 sec)
+	回滚只能回滚到上一次提交的状态。
+
+### 2.4、事务的特性
+
+	A：原子性 事务是最小的工作单元，不可再分。
+	
+	C：一致性 事务要求，在同一个事务中，所有操作必须同时成功或同时失败，以保证数据的一致性。
+	
+	I：隔离性 A事务和B事务之间具有一定的隔离。
+	
+	D：持久性 事务提交，就相当于将没有保存到硬盘上的数据保存到硬盘上
+
+### 2.5、隔离性
+
+	A教室B教室中间有一道墙，墙可以很厚也可以很薄。这就是事务的隔离级别。墙越厚，隔离级别越高。
+	
+	事务和事务之间有4个隔离级别
+		读未提交：read uncommitted（最低的隔离级别）没有提交就读到了
+			事务A可以读取到事务B未提交的数据。
+			这种隔离级别存在的问题：脏读现象！(Dirty Read) 我们称读到了脏数据。
+			这种隔离级别一般都是理论上的，大多数的数据库隔离级别都是二档起步
+	
+		读已提交：read committed 提交之后才能读到
+			事务A只能读取到事务B提交之后的数据。
+			这种隔离级别解决了脏读的现象。
+			这种隔离级别存在的问题：不可重复读取数据。
+				事务开启之后，第一次读到的数据是3条，当前事务还没有结束，可能第二次再读取的时             候，读到的数据是4条，3不等于4称为不可重复读取。
+			这种隔离级别每一次读到的数据是绝对的真实。
+			oracle数据库默认的隔离级别就是读已提交read committed
+	
+		可重复读：repeatable read 提交之后也读不到，永远读取的都是刚开启事务时的数据
+			事务A开启之后，不管是多久，每一次在事务A中读取到的数据都是一样的。即使事务B将数据已         经修改，并且提交了，事务A读取到的数据还是没有发生改变，这就是可重复读。
+			可重复读解决了不可重复读取数据的问题。
+			可重复读存在的问题：会出现幻影读。每一次读取到的数据可能都是幻象，不够真实！
+			mysql中默认的事务隔离级别就是可重复读repeatable read
+	
+		序列化/串行化：serializable 最高的隔离级别 效率最低，但解决了所有的问题。
+			这种隔离级别表示事务排队，不能并发！
+			每一次读取到的数据都是最真实的，而效率是最低的。
+
+### 2.6、设置隔离级别
+
+```
+查看默认隔离级别：select @@transaction_isolation;
++-----------------+
+| @@tx_isolation  |
++-----------------+
+| REPEATABLE-READ |
++-----------------+
+设置全局事务隔离级别：set global transaction isolation level read uncommitted;
+exit;之后，再查询
+select @@transaction_isolation;
++-------------------------+
+| @@transaction_isolation |
++-------------------------+
+| READ-UNCOMMITTED        |
++-------------------------+
+```

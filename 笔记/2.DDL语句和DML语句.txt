@@ -1,0 +1,595 @@
+[TOC]
+
+# DDL语句和DML语句
+
+## 1、表的创建和删除(DDL)
+
+### 1.1、建表的语法格式
+
+	create table 表名(字段名1 数据类型, 字段名2 数据类型, 字段名3 数据类型);
+	create table 表名(
+	字段名1 数据类型, 
+	字段名2 数据类型, 
+	字段名3 数据类型
+	);
+	表名和字段名都属于标识符。
+
+### 1.2、mysql中的数据类型
+
+	varchar(最长255) 可变长度的字符串，会根据实际的数据长度动态分配空间。
+	优点：比较智能，节省空间。
+	缺点：需要动态分配空间，速度慢。
+	
+	char(最长255) 定长字符串 不管实际的数据长度是多少。
+	优点：不需要动态分配空间，速度快。
+	缺点：使用不当可能会导致空间的浪费。
+	
+	int(最长11) 数字中的整数型
+	
+	bigint 数字中的长整型。等同于java中的long。
+	
+	float 单精度浮点型数据
+	
+	double 双精度浮点型数据
+	
+	date 短日期类型
+	
+	datetime 长日期类型
+	
+	clob 字符大对象Character Large OBject 
+	最多可以存储4G的字符串。超过255个字符的都要采用CLOB字符大对象来存储。
+	
+	blob 二进制大对象Binary Large OBject 
+	专门用来存储图片、声音、视频等流媒体数据。
+	往BLOB类型的字段上插入数据的时候，例如插入一个图片、视频等，你需要使用IO流才行。
+	
+	假设有一个t_movie电影表，存储电影信息
+	编号no(bigint)
+	名字name(varchar)
+	故事情节history(clob)
+	上映日期playtime(date)
+	时长time(double)
+	海报image(blob)
+	类型type(char)
+	
+	创建一个学生表 学号、姓名、年龄、性别、邮箱地址
+	create table t_student(
+	no int,
+	name varchar(32),
+	sex char(1),
+	age int(3),
+	email varchar(255)
+	);
+	
+	快速创建表
+	create table emp2 as select * from emp;
+	将一个查询结果当做一张表来新建，新表创建出来了，查询结果作为数据存在新表中。
+	create table mytable as select empno,ename from emp where job = 'MANAGER';
+
+### 1.3、删除表(DDL)
+
+	drop table t_student; 
+	// 当这张表不存在的时候会报错！
+	// 如果这张表存在的话，删除
+	drop table if exists t_student;
+
+### 1.4、对表结构的增删改(DDL)
+
+添加一个字段，删除一个字段，修改一个字段
+
+```
+对表结构的修改需要使用：alter
+在实际开发中，需求一旦确定之后，表一旦设计好之后，很少进行表结构的修改。因为开发进行中的时候，修改表结构，对应的代码就需要进行大量的修改。成本比较高。
+修改表结构的操作很少，可以使用工具
+修改表结构的操作是不需要写到java程序中的。
+```
+
+## 2、约束
+
+在创建表的时候，可以给表中的字段加上一些约束，来保证这个表中数据的完整性、有效性
+
+### 2.1、约束包括哪些？
+
+- 非空约束：not null
+- 唯一性约束: unique
+- 主键约束: primary key
+- 外键约束：foreign key
+- 检查约束：check（mysql不支持，oracle支持）
+
+### 2.2、非空约束：not null
+
+```sql
+非空约束not null约束的字段不能为NULL。
+drop table if exists t_vip;
+create table t_vip(
+	id int,
+	name varchar(255) not null
+);//not null只有列级约束，没有表级约束！
+insert into t_vip(id,name) values(1,'zhangsan');
+insert into t_vip(id,name) values(2,'lisi');
+
+insert into t_vip(id) values(3);
+ERROR 1364 (HY000): Field 'name' doesn't have a default value
+```
+
+### 2.3、唯一性约束: unique
+
+```
+唯一性约束unique约束的字段不能重复，但是可以为NULL。
+drop table if exists t_vip;
+create table t_vip(
+	id int,
+	name varchar(255) unique,//列级约束
+	email varchar(255)
+);
+insert into t_vip(id,name,email) values(1,'zhangsan','zhangsan@123.com');
+insert into t_vip(id,name,email) values(2,'lisi','lisi@123.com');
+insert into t_vip(id,name,email) values(3,'wangwu','wangwu@123.com');
+select * from t_vip;
+
+insert into t_vip(id,name,email) values(4,'wangwu','wangwu@sina.com');
+ERROR 1062 (23000): Duplicate entry 'wangwu' for key 'name'
+
+insert into t_vip(id) values(4);
+insert into t_vip(id) values(5);
++------+----------+------------------+
+| id   | name     | email            |
++------+----------+------------------+
+|    1 | zhangsan | zhangsan@123.com |
+|    2 | lisi     | lisi@123.com     |
+|    3 | wangwu   | wangwu@123.com   |
+|    4 | NULL     | NULL             |
+|    5 | NULL     | NULL             |
++------+----------+------------------+
+name字段虽然被unique约束了，但是可以为NULL。
+
+新需求：name和email两个字段联合起来具有唯一性
+drop table if exists t_vip;
+create table t_vip(
+id int,
+name varchar(255) unique,//列级约束
+email varchar(255) unique//列级约束
+);
+这样创建是不符合以上“新需求”的。这样创建表示：name具有唯一性，email具有唯一性。各自唯一。
+怎么创建这样的表，才能符合新需求呢？
+drop table if exists t_vip;
+create table t_vip(
+id int,
+name varchar(255),
+email varchar(255),
+unique(name,email) 
+);// 约束没有添加在列的后面，这种约束被称为表级约束。
+insert into t_vip(id,name,email) values(1,'zhangsan','zhangsan@123.com');
+insert into t_vip(id,name,email) values(2,'zhangsan','zhangsan@sina.com');
+select * from t_vip;
+name和email两个字段联合起来唯一
+
+unique 和not null可以联合吗？
+drop table if exists t_vip;
+create table t_vip(
+id int,
+name varchar(255) not null unique
+);
+desc t_vip;
++-------+--------------+------+-----+---------+-------+
+| Field | Type         | Null | Key | Default | Extra |
++-------+--------------+------+-----+---------+-------+
+| id    | int(11)      | YES  |     | NULL    |       |
+| name  | varchar(255) | NO   | PRI | NULL    |       |
++-------+--------------+------+-----+---------+-------+
+在mysql当中，如果一个字段同时被not null和unique约束的话，该字段自动变成主键字段。（注意：oracle中不一样！）
+insert into t_vip(id,name) values(1,'zhangsan');
+insert into t_vip(id,name) values(2,'zhangsan'); //错误了：name不能重复
+insert into t_vip(id) values(2); //错误了：name不能为NULL。
+```
+
+### 2.4、主键约束（primary key，简称PK）
+
+```
+主键字段：字段上添加了主键约束，这样的字段叫做：主键字段
+主键值：主键字段中的每一个值都叫做：主键值。
+1个字段做主键，叫做：单一主键
+
+主键值是每一行记录的唯一标识。
+任何一张表都应该有主键，没有主键，表无效。
+主键的特征：not null + unique（主键值不能是NULL，同时也不能重复！）
+
+添加主键约束
+drop table if exists t_vip;
+create table t_vip(
+id int primary key,  //列级约束
+name varchar(255)
+);
+insert into t_vip(id,name) values(1,'zhangsan');
+insert into t_vip(id,name) values(2,'lisi');
+insert into t_vip(id,name) values(2,'wangwu');
+ERROR 1062 (23000): Duplicate entry '2' for key 'PRIMARY'//重复
+insert into t_vip(name) values('zhaoliu');
+ERROR 1364 (HY000): Field 'id' doesn't have a default value//没有给主键设置
+
+可以这样添加主键吗，使用表级约束？
+drop table if exists t_vip;
+// id和name联合起来做主键：复合主键！！！！
+create table t_vip(
+id int,
+name varchar(255),
+email varchar(255),
+primary key(id,name)
+);
+insert into t_vip(id,name,email) values(1,'zhangsan','zhangsan@123.com');
+insert into t_vip(id,name,email) values(1,'lisi','lisi@123.com');
+insert into t_vip(id,name,email) values(1,'lisi','lisi@123.com');
+ERROR 1062 (23000): Duplicate entry '1-lisi' for key 'PRIMARY'
+id和name联合重复
+在实际开发中不建议使用复合主键。建议使用单一主键。因为主键值存在的意义就是这行记录的身份证号，只要意义达到即可，单一主键可以做到。复合主键比较复杂，不建议使用。
+
+一个表中主键约束能加两个吗？
+drop table if exists t_vip;
+create table t_vip(
+id int primary key,
+name varchar(255) primary key
+);
+ERROR 1068 (42000): Multiple primary key defined
+一张表，主键约束只能添加1个。
+
+在mysql当中，有一种机制可以帮助我们自动维护一个主键值
+drop table if exists t_vip;
+create table t_vip(
+id int primary key auto_increment, //auto_increment表示自增，从1开始，以1递增！
+name varchar(255)
+);
+insert into t_vip(name) values('zhangsan');
+insert into t_vip(name) values('zhangsan');
+insert into t_vip(name) values('zhangsan');
+insert into t_vip(name) values('zhangsan');
+insert into t_vip(name) values('zhangsan');
+insert into t_vip(name) values('zhangsan');
+insert into t_vip(name) values('zhangsan');
+insert into t_vip(name) values('zhangsan');
+select * from t_vip;
++----+----------+
+| id | name     |
++----+----------+
+|  1 | zhangsan |
+|  2 | zhangsan |
+|  3 | zhangsan |
+|  4 | zhangsan |
+|  5 | zhangsan |
+|  6 | zhangsan |
+|  7 | zhangsan |
+|  8 | zhangsan |
++----+----------+
+```
+
+### 2.5、外键约束（foreign key，简称FK）
+
+```
+请设计数据库表，来描述“班级和学生”的信息？
+t_class 班级表
+classno(pk)			classname
+------------------------------------------------------
+100					北京市大兴区亦庄镇第二中学高三1班
+101					北京市大兴区亦庄镇第二中学高三1班
+t_student 学生表
+no(pk)			name				cno(FK引用t_class这张表的classno)
+----------------------------------------------------------------
+1					jack				100
+2					lucy				100
+3					lilei				100
+4					hanmeimei		    100
+5					zhangsan			101
+6					lisi				101
+7					wangwu			    101
+8					zhaoliu			    101
+将t_student中的cno和t_class中的classno关联起来，使前者只能取值为后者值域的值。
+drop table if exists t_student;
+drop table if exists t_class;
+create table t_class(
+classno int primary key,
+classname varchar(255)
+);
+create table t_student(
+no int primary key auto_increment,
+name varchar(255),
+cno int,
+foreign key(cno) references t_class(classno)
+);
+insert into t_class(classno, classname) values(100, 'class1');
+insert into t_class(classno, classname) values(101, 'class2');
+
+insert into t_student(name,cno) values('jack', 100);
+insert into t_student(name,cno) values('lucy', 100);
+insert into t_student(name,cno) values('lilei', 100);
+insert into t_student(name,cno) values('hanmeimei', 100);
+insert into t_student(name,cno) values('zhangsan', 101);
+insert into t_student(name,cno) values('lisi', 101);
+insert into t_student(name,cno) values('wangwu', 101);
+insert into t_student(name,cno) values('zhaoliu', 101);
+
++---------+-----------+
+| classno | classname |
++---------+-----------+
+|     100 | class1    |
+|     101 | class2    |
++---------+-----------+
++----+-----------+------+
+| no | name      | cno  |
++----+-----------+------+
+|  1 | jack      |  100 |
+|  2 | lucy      |  100 |
+|  3 | lilei     |  100 |
+|  4 | hanmeimei |  100 |
+|  5 | zhangsan  |  101 |
+|  6 | lisi      |  101 |
+|  7 | wangwu    |  101 |
+|  8 | zhaoliu   |  101 |
++----+-----------+------+
+insert into t_student(name,cno) values('zhaoliu', 102);
+ERROR 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`mayjaneboy`.`t_student`, CONSTRAINT `t_student_ibfk_1` FOREIGN KEY (`cno`) REFERENCES `t_class` (`classno`))
+当cno字段没有任何约束的时候，可能会导致数据无效。可能出现一个102，但是102班级不存在。所以为了保证cno字段中的值都是100和101，需要给cno字段添加外键约束。那么：cno字段就是外键字段。cno字段中的每一个值都是外键值。
+注意：
+t_class是父表
+t_student是子表
+删除表的顺序？先删子，再删父。
+创建表的顺序？先创建父，再创建子。
+删除数据的顺序？先删子，再删父。
+插入数据的顺序？先插入父，再插入子。
+
+思考：子表中的外键引用的父表中的某个字段，被引用的这个字段必须是主键吗？
+不一定是主键，但至少应该具有唯一性unique约束。
+外键可以为NULL吗？外键值可以为NULL。
+```
+
+
+
+## 3、插入数据insert(DML)
+
+	insert into 表名(字段名1,字段名2,字段名3...) values(值1,值2,值3);
+	字段名和值要一一对应,数量要对应。数据类型要对应。
+	
+	insert into t_student(no,name,sex,age,email) values(1,'zhangsan','m',20,'zhangsan@123.com');
+	insert into t_student(email,name,sex,age,no) values('lisi@123.com','lisi','f',20,2);
+	insert into t_student(no) values(3);
+	+------+----------+------+------+------------------+
+	| no   | name     | sex  | age  | email            |
+	+------+----------+------+------+------------------+
+	|    1 | zhangsan | m    |   20 | zhangsan@123.com |
+	|    2 | lisi     | f    |   20 | lisi@123.com     |
+	|    3 | NULL     | NULL | NULL | NULL             |
+	+------+----------+------+------+------------------+
+	insert语句但凡执行成功了，那么必然会多一条记录。如果没有给其它字段指定值的话，默认是NULL。
+	
+	create table t_student(
+	no int,
+	name varchar(32),
+	sex char(1) default 'm',
+	age int(3),
+	email varchar(255)
+	);
+	在建表时，default可以指定某一字段的默认值，不指定默认值则为null
+	+-------+--------------+------+-----+---------+-------+
+	| Field | Type         | Null | Key | Default | Extra |
+	+-------+--------------+------+-----+---------+-------+
+	| no    | int(11)      | YES  |     | NULL    |       |
+	| name  | varchar(32)  | YES  |     | NULL    |       |
+	| sex   | char(1)      | YES  |     | m       |       |
+	| age   | int(3)       | YES  |     | NULL    |       |
+	| email | varchar(255) | YES  |     | NULL    |       |
+	+-------+--------------+------+-----+---------+-------+
+	insert into t_student(no) values(1);
+	select * from t_student;
+	+------+------+------+------+-------+
+	| no   | name | sex  | age  | email |
+	+------+------+------+------+-------+
+	|    1 | NULL | m    | NULL | NULL  |
+	+------+------+------+------+-------+
+	
+	insert语句中的“字段名”可以省略吗？可以
+	insert into t_student values(2); //错误
+	// 注意：前面的字段名省略的话，等于都写上了！所以值也要都写上，按照建表时的顺序书写。
+	insert into t_student values(2, 'lisi', 'f', 20, 'lisi@123.com');
+	+------+------+------+------+--------------+
+	| no   | name | sex  | age  | email        |
+	+------+------+------+------+--------------+
+	|    1 | NULL | m    | NULL | NULL         |
+	|    2 | lisi | f    |   20 | lisi@123.com |
+	+------+------+------+------+--------------+
+
+### 3.1、insert插入日期
+
+	数字格式化：format
+	
+	select ename,sal from emp;
+	+--------+---------+
+	| ename  | sal     |
+	+--------+---------+
+	| SMITH  |  800.00 |
+	| ALLEN  | 1600.00 |
+	| WARD   | 1250.00 |
+	| JONES  | 2975.00 |
+	| MARTIN | 1250.00 |
+	| BLAKE  | 2850.00 |
+	| CLARK  | 2450.00 |
+	| SCOTT  | 3000.00 |
+	| KING   | 5000.00 |
+	| TURNER | 1500.00 |
+	| ADAMS  | 1100.00 |
+	| JAMES  |  950.00 |
+	| FORD   | 3000.00 |
+	| MILLER | 1300.00 |
+	+--------+---------+
+	格式化数字：format(数字, '格式')
+	select ename,format(sal, '$999,999') as sal from emp;
+	+--------+-------+
+	| ename  | sal   |
+	+--------+-------+
+	| SMITH  | 800   |
+	| ALLEN  | 1,600 |
+	| WARD   | 1,250 |
+	| JONES  | 2,975 |
+	| MARTIN | 1,250 |
+	| BLAKE  | 2,850 |
+	| CLARK  | 2,450 |
+	| SCOTT  | 3,000 |
+	| KING   | 5,000 |
+	| TURNER | 1,500 |
+	| ADAMS  | 1,100 |
+	| JAMES  | 950   |
+	| FORD   | 3,000 |
+	| MILLER | 1,300 |
+	+--------+-------+
+	加入了千分位
+	
+	str_to_date：将字符串varchar类型转换成date类型
+	date_format：将date类型转换成具有一定格式的varchar字符串类型。
+	
+	drop table if exists t_user;
+	create table t_user(
+	id int,
+	name varchar(32),
+	birth date
+	);
+	desc t_user;
+	+-------+-------------+------+-----+---------+-------+
+	| Field | Type        | Null | Key | Default | Extra |
+	+-------+-------------+------+-----+---------+-------+
+	| id    | int(11)     | YES  |     | NULL    |       |
+	| name  | varchar(32) | YES  |     | NULL    |       |
+	| birth | date        | YES  |     | NULL    |       |
+	+-------+-------------+------+-----+---------+-------+
+	insert into t_user(id,name,birth) values(1,'zhangsan','01-10-1990');
+	ERROR 1292 (22007): Incorrect date value: '01-10-1990' for column 'birth' at row 1
+	birth是date类型，加单引号表示是字符串varchar
+	
+	怎么办？可以使用str_to_date函数进行类型转换。
+	str_to_date函数可以将字符串varchar类型的数据转换成日期date类型数据 
+	str_to_date('字符串格式', '日期格式')
+	mysql的日期格式：%Y年 %m月 %d日 %h时 %i分 %s秒
+	insert into t_user(id,name,birth) values(1, 'zhangsan', str_to_date('01-10-1990','%d-%m-%Y'));
+	select * from t_user;
+	+------+----------+------------+
+	| id   | name     | birth      |
+	+------+----------+------------+
+	|    1 | zhangsan | 1990-10-01 |
+	+------+----------+------------+
+	1 row in set (0.00 sec)
+	
+	如果提供的字符串类型数据是 %Y-%m-%d 这个格式，不用str_to_date函数也可以。
+	insert into t_user(id,name,birth) values(2, 'lisi', '1990-10-01');
+	select * from t_user;
+	+------+----------+------------+
+	| id   | name     | birth      |
+	+------+----------+------------+
+	|    1 | zhangsan | 1990-10-01 |
+	|    2 | lisi     | 1990-10-01 |
+	+------+----------+------------+
+	2 rows in set (0.00 sec)
+	
+	date_format 可以将日期类型数据转换成特定格式的字符串数据。
+	date_format(日期类型数据, '日期格式')
+	select id,name,date_format(birth, '%m/%d/%Y') as birth from t_user;
+	+------+----------+------------+
+	| id   | name     | birth      |
+	+------+----------+------------+
+	|    1 | zhangsan | 10/01/1990 |
+	|    2 | lisi     | 10/01/1990 |
+	+------+----------+------------+
+	select id,name,birth from t_user;
+	+------+----------+------------+
+	| id   | name     | birth      |
+	+------+----------+------------+
+	|    1 | zhangsan | 1990-10-01 |
+	|    2 | lisi     | 1990-10-01 |
+	+------+----------+------------+
+	以上的SQL语句实际上是进行了默认的日期格式化，自动将数据库中的date类型转换成varchar类型。并且采用的格式是mysql默认的日期格式：'%Y-%m-%d'
+	
+	java中的日期格式：yyyy-MM-dd HH:mm:ss SSS
+	
+	date短日期，只包括年月日信息。
+	datetime长日期：包括年月日时分秒信息。
+	mysql短日期默认格式：%Y-%m-%d
+	mysql长日期默认格式：%Y-%m-%d %h:%i:%s
+	drop table if exists t_user;
+	create table t_user(
+	id int,
+	name varchar(32),
+	birth date,
+	create_time datetime
+	);
+	insert into t_user(id,name,birth,create_time) values(1,'zhangsan','1990-10-01','2020-03-18 15:49:50');
+	在mysql中怎么获取系统当前时间？
+	now() 函数，并且获取的时间带有：时分秒信息，是datetime类型的。
+	insert into t_user(id,name,birth,create_time) values(2,'lisi','1991-10-01',now());
+
+### 3.2、insert一次插入多条数据
+
+```
+insert into t_user(id,name,birth,create_time) values
+(1,'zs','1980-10-11',now()), 
+(2,'lisi','1981-10-11',now()),
+(3,'wangwu','1982-10-11',now());
+```
+
+### 3.3、将查询结果插入到一张表中
+
+```
+create table dept_bak as select * from dept;
+select * from dept_bak;
+select * from dept_bak;
++--------+------------+----------+
+| DEPTNO | DNAME      | LOC      |
++--------+------------+----------+
+|     10 | ACCOUNTING | NEW YORK |
+|     20 | RESEARCH   | DALLAS   |
+|     30 | SALES      | CHICAGO  |
+|     40 | OPERATIONS | BOSTON   |
++--------+------------+----------+
+insert into dept_bak select * from dept;
+select * from dept_bak;
++--------+------------+----------+
+| DEPTNO | DNAME      | LOC      |
++--------+------------+----------+
+|     10 | ACCOUNTING | NEW YORK |
+|     20 | RESEARCH   | DALLAS   |
+|     30 | SALES      | CHICAGO  |
+|     40 | OPERATIONS | BOSTON   |
+|     10 | ACCOUNTING | NEW YORK |
+|     20 | RESEARCH   | DALLAS   |
+|     30 | SALES      | CHICAGO  |
+|     40 | OPERATIONS | BOSTON   |
++--------+------------+----------+
+```
+
+## 4、修改update(DML)
+
+	update 表名 set 字段名1=值1,字段名2=值2,字段名3=值3... where 条件;
+	注意：没有条件限制会导致所有数据全部更新。
+	
+	update t_user set name = 'jack', birth = '2000-10-11' where id = 2;
+	+------+----------+------------+---------------------+
+	| id   | name     | birth      | create_time         |
+	+------+----------+------------+---------------------+
+	|    1 | zhangsan | 1990-10-01 | 2020-03-18 15:49:50 |
+	|    2 | jack     | 2000-10-11 | 2020-03-18 15:51:23 |
+	+------+----------+------------+---------------------+
+	更新所有？update t_user set name = 'abc';
+
+## 5、删除数据 delete(DML)
+
+	delete from 表名 where 条件;
+	注意：没有条件，整张表的数据会全部删除！
+	delete from t_user where id = 2;
+	delete from t_user; // 删除所有！
+	
+	delete from dept_bak; //这种删除数据的方式比较慢。(DML语句)
+	select * from dept_bak;
+	Empty set (0.00 sec)
+	表中的数据被删除了，但是这个数据在硬盘上的真实存储空间不会被释放。支持回滚，可以再恢复数据。
+	
+	快速删除表中的数据
+	truncate table dept_bak;(DDL语句)
+	truncate语句删除数据的原理
+	删除效率比较高，表被一次截断，物理删除。不支持回滚。
+	truncate是删除表中的数据，表还在！
+	
+	删除表操作 drop table 表名; // 这不是删除表中的数据，这是把表删除。

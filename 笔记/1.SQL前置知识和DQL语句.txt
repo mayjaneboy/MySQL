@@ -1,0 +1,1790 @@
+[TOC]
+
+# SQL前置知识和DQL语句
+
+## 1、什么是数据库、数据库管理系统、SQL？
+
+	数据库：
+	英文单词DataBase，简称DB。按照一定格式存储数据的一些文件的组合。
+	顾名思义：存储数据的仓库，实际上就是一堆文件。这些文件中存储了具有特定格式的数据。
+	
+	数据库管理系统：
+	DataBaseManagement，简称DBMS。
+	数据库管理系统是专门用来管理数据库中数据的，数据库管理系统可以对数据库当中的数据进行增删改查。常见的数据库管理系统：MySQL、Oracle、MS SqlServer、DB2、sybase等....
+	
+	SQL：结构化查询语言
+	程序员需要学习SQL语句，程序员通过编写SQL语句，然后DBMS负责执行SQL语句，最终来完成数据库中数据的增删改查操作。SQL是一套标准，程序员主要学习的就是SQL语句，这个SQL在mysql中可以使用，同时在Oracle中也可以使用，在DB2中也可以使用。
+
+## 2、安装MySQL数据库管理系统。
+
+	需要注意的事项
+	端口号：
+	端口号port是任何一个软件/应用都会有的，端口号是应用的唯一代表。
+	端口号通常和IP地址在一块，IP地址用来定位计算机的，端口号port是用来定位计算机上某个服务的/某个应用的！
+	mysql数据库启动的时候，这个服务占有的默认端口号是3306
+	
+	选择配置环境变量path：（mysql安装路径下的bin目录）
+	path=C:\Program Files\MySQL\MySQL Server 8.0\bin
+	
+	mysql超级管理员用户名不能改，一定是：root 需要设置mysql数据库超级管理员的密码。
+	
+	root账户远程访问。
+	激活：表示root账号可以在外地登录。
+	不激活：表示root账号只能在本机上使用。
+
+## 3、MySQL数据库的完美卸载！
+
+```
+第一步：双击安装包进行卸载删除。
+第二步：删除目录：
+把C:\ProgramData下面的MySQL目录干掉。
+把C:\Program Files (x86)下面的MySQL目录干掉。
+```
+
+## 4、计算机上的MySQL服务
+
+```
+计算机-->右键-->管理-->服务和应用程序-->服务-->找mysql服务
+MySQL的服务，默认是“启动”的状态，只有启动了mysql才能用。
+默认情况下是“自动”启动，自动启动表示下一次重启操作系统的时候自动启动该服务。
+```
+
+## 5、在cmd或者powershell中怎么使用命令来启动和关闭mysql服务？
+
+	net stop 服务名称;
+	net start 服务名称;
+	其它服务的启停都可以采用以上的命令。
+
+## 6、使用客户端登录mysql数据库呢？
+
+使用bin目录下的mysql.exe命令来连接mysql数据库服务器
+
+	在cmd或者powershell里
+	C:\Users\mayja>mysql -u root -p
+	Enter password: ******
+	Welcome to the MySQL monitor.  Commands end with ; or \g.
+	Your MySQL connection id is 28
+	Server version: 8.0.39 MySQL Community Server - GPL
+	
+	Copyright (c) 2000, 2024, Oracle and/or its affiliates.
+	
+	Oracle is a registered trademark of Oracle Corporation and/or its
+	affiliates. Other names may be trademarks of their respective
+	owners.
+	
+	Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+## 7、mysql常用命令
+
+所有命令都要以分号结尾，不区分大小写。
+
+	退出mysql exit；
+	
+	查看mysql中有哪些数据库 show databases; 
+	show databases;
+	+--------------------+
+	| Database           |
+	+--------------------+
+	| information_schema |
+	| mysql              |
+	| performance_schema |
+	| test               |
+	+--------------------+
+	根据版本不同和安装的服务不同，这里显示（自带的数据库）的可能不同。
+	
+	怎么选择使用某个数据库呢？
+	use test;
+	
+	怎么创建数据库呢？
+	create database mayjaneboy;
+	Query OK, 1 row affected (0.00 sec)
+	
+	查看某个数据库下有哪些表？
+	show tables;
+	+----------------------+
+	| Tables_in_mayjaneboy |
+	+----------------------+
+	| dept                 |
+	| emp                  |
+	| salgrade             |
+	+----------------------+
+	3 rows in set (0.00 sec)
+	
+	查看mysql数据库的版本号：
+	select version();
+	+-----------+
+	| version() |
+	+-----------+
+	| 8.0.39    |
+	+-----------+
+	1 row in set (0.00 sec)
+	
+	查看当前使用的是哪个数据库？
+	select database();
+	+-------------+
+	| database()  |
+	+-------------+
+	| mayjaneboy |
+	+-------------+
+	
+	show
+	-> databases
+	-> ;
+	+--------------------+
+	| Database           |
+	+--------------------+
+	| information_schema |
+	| bjpowernode        |
+	| mysql              |
+	| performance_schema |
+	| test               |
+	+--------------------+
+	注意：mysql是不见“;”不执行，“;”表示结束！
+	
+	show
+	->
+	->
+	-> \c
+	mysql>
+	\c用来终止一条命令的输入。
+
+## 8、数据库当中最基本的单元是表：table
+
+	    姓名  性别      年龄(列：字段) 
+	---------------------------
+	张三男20            ------->行（记录）
+	李四女21            ------->行（记录）
+	王五男22            ------->行（记录）
+	
+	表比较直观，数据库当中是以表格的形式表示数据的。
+	
+	任何一张表都有行和列：
+	行（row）：被称为数据/记录。
+	列（column）：被称为字段。
+	
+	了解一下：
+	每一个字段都有：字段名、数据类型、约束等属性。
+	字段名可以理解，是一个普通的名字，见名知意就行。
+	数据类型：字符串，数字，日期等，后期讲。
+	约束：约束也有很多。其中一个叫做唯一性约束，这种约束添加后，该字段中的数据不能重复。
+
+## 9、SQL语句的分类？
+
+	SQL语句有很多，最好进行分门别类，这样更容易记忆。
+	DQL：
+	数据查询语言（凡是带有select关键字的都是查询语句）
+	select...
+	
+	DML：
+	数据操作语言（凡是对表当中的数据进行增删改的都是DML）
+	insert 增
+	delete 删
+	update 改
+	这个主要是操作表中的数据data。
+	
+	DDL：
+	数据定义语言
+	凡是带有create、drop、alter的都是DDL。
+	DDL主要操作的是表的结构。不是表中的数据。
+	create：新建，等同于增
+	drop：删除
+	alter：修改
+	这个增删改和DML不同，这个主要是对表结构进行操作。
+	
+	TCL：
+	是事务控制语言
+	事务提交：commit;
+	事务回滚：rollback;
+	
+	DCL：
+	是数据控制语言。
+	例如：授权grant、撤销权限revoke....
+
+## 10、导入提前准备好的脚本文件：
+
+	.sql文件被称为sql脚本文件，其中编写了大量的sql语句。执行sql脚本文件的时候，该文件中所有的sql语句会全部执行！批量的执行SQL语句，可以使用sql脚本文件。
+	在导入前，要先创建一个数据库create并使用它use,然后用路径导入source
+	create database mayjaneboy;
+	use mayjaneboy;
+	source 路径;
+
+## 11、关于导入的这几张表
+
+	show tables;
+	+----------------------+
+	| Tables_in_mayjaneboy |
+	+----------------------+
+	| dept                 |
+	| emp                  |
+	| salgrade             |
+	+----------------------+
+	3 rows in set (0.00 sec)
+	dept是部门表
+	emp是员工表
+	salgrade 是工资等级表
+	
+	怎么查看表中的数据呢？
+	select * from 表名; //*代表查询这个表中的所有数据
+	select * from dept;
+	+--------+------------+----------+
+	| DEPTNO | DNAME      | LOC      |
+	+--------+------------+----------+
+	|     10 | ACCOUNTING | NEW YORK |
+	|     20 | RESEARCH   | DALLAS   |
+	|     30 | SALES      | CHICAGO  |
+	|     40 | OPERATIONS | BOSTON   |
+	+--------+------------+----------+
+	select * from salgrade;
+	+-------+-------+-------+
+	| GRADE | LOSAL | HISAL |
+	+-------+-------+-------+
+	|     1 |   700 |  1200 |
+	|     2 |  1201 |  1400 |
+	|     3 |  1401 |  2000 |
+	|     4 |  2001 |  3000 |
+	|     5 |  3001 |  9999 |
+	+-------+-------+-------+
+
+## 12、不看表中的数据，只看表的结构
+
+有一个命令：desc 表名; 
+
+```
+desc dept;
++--------+-------------+------+-----+---------+-------+
+| Field  | Type        | Null | Key | Default | Extra |
++--------+-------------+------+-----+---------+-------+
+| DEPTNO | int(2)      | NO   | PRI | NULL    |       |部门编号
+| DNAME  | varchar(14) | YES  |     | NULL    |       |部门名字
+| LOC    | varchar(13) | YES  |     | NULL    |       |地理位置
++--------+-------------+------+-----+---------+-------+
+desc emp;
++----------+-------------+------+-----+---------+-------+
+| Field    | Type        | Null | Key | Default | Extra |
++----------+-------------+------+-----+---------+-------+
+| EMPNO    | int(4)      | NO   | PRI | NULL    |       |员工编号
+| ENAME    | varchar(10) | YES  |     | NULL    |       |员工姓名
+| JOB      | varchar(9)  | YES  |     | NULL    |       |工作岗位
+| MGR      | int(4)      | YES  |     | NULL    |       |上级编号
+| HIREDATE | date        | YES  |     | NULL    |       |入职日期
+| SAL      | double(7,2) | YES  |     | NULL    |       |工资
+| COMM     | double(7,2) | YES  |     | NULL    |       |补助
+| DEPTNO   | int(2)      | YES  |     | NULL    |       |部门编号
++----------+-------------+------+-----+---------+-------+
+desc salgrade;
++-------+---------+------+-----+---------+-------+
+| Field | Type    | Null | Key | Default | Extra |
++-------+---------+------+-----+---------+-------+
+| GRADE | int(11) | YES  |     | NULL    |       |工资等级
+| LOSAL | int(11) | YES  |     | NULL    |       |最低工资
+| HISAL | int(11) | YES  |     | NULL    |       |最高工资
++-------+---------+------+-----+---------+-------+
+```
+
+## 13、简单查询
+
+### 13.1、查询一个字段  
+
+select 字段名 from 表名;select和from都是关键字。字段名和表名都是标识符。
+
+	查询部门名字？
+	select dname from dept;
+	+------------+
+	| dname      |
+	+------------+
+	| ACCOUNTING |
+	| RESEARCH   |
+	| SALES      |
+	| OPERATIONS |
+	+------------+
+	4 rows in set (0.00 sec)
+
+### 13.2、查询两个字段，或者多个字段
+
+使用逗号隔开“,”
+
+```
+查询部门编号和部门名？select deptno,dname from dept;
++--------+------------+
+| deptno | dname      |
++--------+------------+
+|     10 | ACCOUNTING |
+|     20 | RESEARCH   |
+|     30 | SALES      |
+|     40 | OPERATIONS |
++--------+------------+
+```
+
+### 13.3、查询所有字段
+
+	第一种方式：可以把每个字段都写上
+	select a,b,c,d,e,f... from tablename;
+	
+	第二种方式：可以使用*
+	select * from dept;
+	+--------+------------+----------+
+	| DEPTNO | DNAME      | LOC      |
+	+--------+------------+----------+
+	|     10 | ACCOUNTING | NEW YORK |
+	|     20 | RESEARCH   | DALLAS   |
+	|     30 | SALES      | CHICAGO  |
+	|     40 | OPERATIONS | BOSTON   |
+	+--------+------------+----------+
+	这种方式是将*翻译成所有的字段名
+
+### 13.4、给查询的列起别名？
+
+使用as关键字起别名。
+
+```
+select deptno,dname as deptname from dept;
++--------+------------+
+| deptno | deptname   |
++--------+------------+
+|     10 | ACCOUNTING |
+|     20 | RESEARCH   |
+|     30 | SALES      |
+|     40 | OPERATIONS |
++--------+------------+
+4 rows in set (0.00 sec)
+只是将显示的查询结果列名显示为deptname，原表列名还是叫：dname select语句是永远都不会进行修改操作的。（因为只负责查询）
+
+as关键字可以省略吗？可以的  select deptno,dname deptname from dept;
+
+假设起别名的时候，别名里面有空格，怎么办? 加单引号
+select deptno,dname 'dept name' from dept;
++--------+------------+
+| deptno | dept name  |
++--------+------------+
+|     10 | ACCOUNTING |
+|     20 | RESEARCH   |
+|     30 | SALES      |
+|     40 | OPERATIONS |
++--------+------------+
+4 rows in set (0.00 sec)
+```
+
+	计算员工年薪？sal * 12
+	select ename,sal*12 as '年薪' from emp; //别名是中文，用单引号括起来。
+	+--------+----------+
+	| ename  | 年薪        |
+	+--------+----------+
+	| SMITH  |  9600.00 |
+	| ALLEN  | 19200.00 |
+	| WARD   | 15000.00 |
+	| JONES  | 35700.00 |
+	| MARTIN | 15000.00 |
+	| BLAKE  | 34200.00 |
+	| CLARK  | 29400.00 |
+	| SCOTT  | 36000.00 |
+	| KING   | 60000.00 |
+	| TURNER | 18000.00 |
+	| ADAMS  | 13200.00 |
+	| JAMES  | 11400.00 |
+	| FORD   | 36000.00 |
+	| MILLER | 15600.00 |
+	+--------+----------+
+
+## 14、条件查询
+
+不是将表中所有数据都查出来。是查询出来符合条件的。
+
+```
+select 字段1,字段2,字段3.... from  表名 where 条件;
+```
+
+	都有哪些条件：
+	
+	= 等于 查询薪资等于800的员工姓名和编号？
+	select empno,ename from emp where sal = 800;
+	查询SMITH的编号和薪资？
+	select empno,sal from emp where ename = 'SMITH'; //字符串使用单引号
+	
+	<>或!= 不等于
+	查询薪资不等于800的员工姓名和编号？
+	select empno,ename from emp where sal != 800;
+	select empno,ename from emp where sal <> 800; // 小于号和大于号组成的不等号
+	
+	< 小于
+	查询薪资小于2000的员工姓名和编号？
+	select empno,ename,sal from emp where sal < 2000;
+	+-------+--------+---------+
+	| empno | ename  | sal     |
+	+-------+--------+---------+
+	|  7369 | SMITH  |  800.00 |
+	|  7499 | ALLEN  | 1600.00 |
+	|  7521 | WARD   | 1250.00 |
+	|  7654 | MARTIN | 1250.00 |
+	|  7844 | TURNER | 1500.00 |
+	|  7876 | ADAMS  | 1100.00 |
+	|  7900 | JAMES  |  950.00 |
+	|  7934 | MILLER | 1300.00 |
+	+-------+--------+---------+
+	8 rows in set (0.00 sec)
+	
+	<= 小于等于
+	查询薪资小于等于3000的员工姓名和编号？
+	select empno,ename,sal from emp where sal <= 3000;
+	
+	> 大于
+	查询薪资大于3000的员工姓名和编号？
+	select empno,ename,sal from emp where sal > 3000;
+	
+	>= 大于等于
+	查询薪资大于等于3000的员工姓名和编号？
+	select empno,ename,sal from emp where sal >= 3000;
+	
+	between … and …. 两个值之间, 等同于 >= and <= between and是闭区间，包括两端的值。
+	查询薪资在2450和3000之间的员工信息？包括2450和3000
+	select empno,ename,sal from emp where sal between 2450 and 3000;
+	
+	is null 为null（is not null 不为nul）
+	查询哪些员工的津贴/补助为null？
+	select empno,ename,sal,comm from emp where comm = null;
+	Empty set (0.00 sec)
+	select empno,ename,sal,comm from emp where comm is null;
+	+-------+--------+---------+------+
+	| empno | ename  | sal     | comm |
+	+-------+--------+---------+------+
+	|  7369 | SMITH  |  800.00 | NULL |
+	|  7566 | JONES  | 2975.00 | NULL |
+	|  7698 | BLAKE  | 2850.00 | NULL |
+	|  7782 | CLARK  | 2450.00 | NULL |
+	|  7788 | SCOTT  | 3000.00 | NULL |
+	|  7839 | KING   | 5000.00 | NULL |
+	|  7876 | ADAMS  | 1100.00 | NULL |
+	|  7900 | JAMES  |  950.00 | NULL |
+	|  7902 | FORD   | 3000.00 | NULL |
+	|  7934 | MILLER | 1300.00 | NULL |
+	+-------+--------+---------+------+
+	10 rows in set (0.00 sec)
+	在数据库当中null不能使用等号进行衡量。需要使用is null 因为数据库中的null代表什么也没有，它不是一个值。
+	
+	and 并且
+	查询工作岗位是MANAGER并且工资大于2500的员工信息？
+	select empno,ename,job,sal from emp where job = 'MANAGER' and sal > 2500;
+	+-------+-------+---------+---------+
+	| empno | ename | job     | sal     |
+	+-------+-------+---------+---------+
+	|  7566 | JONES | MANAGER | 2975.00 |
+	|  7698 | BLAKE | MANAGER | 2850.00 |
+	+-------+-------+---------+---------+
+	2 rows in set (0.00 sec)
+	
+	or 或者
+	查询工作岗位是MANAGER和SALESMAN的员工？
+	select empno,ename,job from emp where job = 'MANAGER' or job = 'SALESMAN';
+	+-------+--------+----------+
+	| empno | ename  | job      |
+	+-------+--------+----------+
+	|  7499 | ALLEN  | SALESMAN |
+	|  7521 | WARD   | SALESMAN |
+	|  7566 | JONES  | MANAGER  |
+	|  7654 | MARTIN | SALESMAN |
+	|  7698 | BLAKE  | MANAGER  |
+	|  7782 | CLARK  | MANAGER  |
+	|  7844 | TURNER | SALESMAN |
+	+-------+--------+----------+
+	7 rows in set (0.00 sec)
+	
+	and和or同时出现的话，有优先级问题吗？and优先级比or高。
+	查询工资大于2500，并且部门编号为10或20部门的员工？
+	select * from emp where sal > 2500 and deptno = 10 or deptno = 20;
+	以上语句会先执行and，然后执行or。
+	
+	select * from emp where sal > 2500 and (deptno = 10 or deptno = 20);
+	and和or同时出现，and优先级较高。如果想让or先执行，需要加“小括号”
+	
+	in 包含，相当于多个 or （not in 不在这个范围中）
+	查询工作岗位是MANAGER和SALESMAN的员工？
+	select empno,ename,job from emp where job = 'MANAGER' or job = 'SALESMAN';
+	select empno,ename,job from emp where job in('MANAGER', 'SALESMAN');
+	
+	注意：in不是一个区间。in后面跟的是具体的值。
+	查询薪资是800和5000的员工信息？
+	select ename,sal from emp where sal = 800 or sal = 5000;
+	select ename,sal from emp where sal in(800, 5000); //不是表示800到5000都找出来。
+	+-------+---------+
+	| ename | sal     |
+	+-------+---------+
+	| SMITH |  800.00 |
+	| KING  | 5000.00 |
+	+-------+---------+
+	2 rows in set (0.00 sec)
+	
+	not 可以取非，主要用在 is 或 in 中
+	is null
+	is not null
+	in
+	not in
+	
+	like 称为模糊查询，支持%或下划线匹配 %匹配任意多个字符 下划线：任意一个字符。
+	找出名字中含有O的？
+	select ename from emp where ename like '%O%';
+	+-------+
+	| ename |
+	+-------+
+	| JONES |
+	| SCOTT |
+	| FORD  |
+	+-------+
+	3 rows in set (0.00 sec)
+	找出名字以T结尾的？
+	select ename from emp where ename like '%T';
+	select ename from emp where ename like 'K%';
+	
+	找出第二个字每是A的？
+	select ename from emp where ename like '_A%';
+	找出第三个字每是A的？
+	select ename from emp where ename like '__R%';
+	
+	找出名字中有“_”的？
+	select name from t_student where name like '%_%'; //这样不行。
+	select name from t_student where name like '%\_%'; // \转义字符。
+	+----------+
+	| name     |
+	+----------+
+	| jack_son |
+	+----------+
+
+## 15、排序
+
+	查询所有员工薪资
+	select ename,sal from emp order by sal; // 默认是升序
+	+--------+---------+
+	| ename  | sal     |
+	+--------+---------+
+	| SMITH  |  800.00 |
+	| JAMES  |  950.00 |
+	| ADAMS  | 1100.00 |
+	| WARD   | 1250.00 |
+	| MARTIN | 1250.00 |
+	| MILLER | 1300.00 |
+	| TURNER | 1500.00 |
+	| ALLEN  | 1600.00 |
+	| CLARK  | 2450.00 |
+	| BLAKE  | 2850.00 |
+	| JONES  | 2975.00 |
+	| FORD   | 3000.00 |
+	| SCOTT  | 3000.00 |
+	| KING   | 5000.00 |
+	+--------+---------+
+	//降序
+	select ename,sal from emp order by sal desc;
+	指定升序？
+	select ename,salfromemporder by sal asc;
+
+按照多个字段排序
+
+	查询员工名字和薪资，要求按照薪资升序，如果薪资一样的话，再按照名字升序排列。
+	select ename,sal from emp order by sal asc, ename asc; // sal在前起主导，只有sal相等的时候，才会考虑启用ename排序。
+	+--------+---------+
+	| ename  | sal     |
+	+--------+---------+
+	| SMITH  |  800.00 |
+	| JAMES  |  950.00 |
+	| ADAMS  | 1100.00 |
+	| MARTIN | 1250.00 |
+	| WARD   | 1250.00 |
+	| MILLER | 1300.00 |
+	| TURNER | 1500.00 |
+	| ALLEN  | 1600.00 |
+	| CLARK  | 2450.00 |
+	| BLAKE  | 2850.00 |
+	| JONES  | 2975.00 |
+	| FORD   | 3000.00 |
+	| SCOTT  | 3000.00 |
+	| KING   | 5000.00 |
+	+--------+---------+
+
+```
+综合案例：
+找出工资在1250到3000之间的员工信息，要求按照薪资降序排列。
+select ename,sal from emp where sal between 1250 and 3000 order by sal desc;
+```
+
+	关键字书写顺序不能变：
+	select
+	...
+	from
+	...
+	where
+	...
+	order by
+	...
+	
+	以上语句的执行顺序必须掌握：
+	第一步：from
+	第二步：where
+	第三步：select
+	第四步：order by（排序总是在最后执行！）
+
+## 16、数据处理函数
+
+	数据处理函数又被称为单行处理函数
+	单行处理函数的特点：一个输入对应一个输出。
+	和单行处理函数相对的是：多行处理函数。（多行处理函数特点：多个输入，对应1个输出！）
+
+### 常见的单行处理函数
+
+	lower 转换小写
+	select lower(ename) as ename from emp;
+	+--------+
+	| ename  |
+	+--------+
+	| smith  |
+	| allen  |
+	| ward   |
+	| jones  |
+	| martin |
+	| blake  |
+	| clark  |
+	| scott  |
+	| king   |
+	| turner |
+	| adams  |
+	| james  |
+	| ford   |
+	| miller |
+	+--------+
+	14个输入，最后还是14个输出。这是单行处理函数的特点。
+	
+	upper 转换大写
+	select upper(name) as name from t_student;
+	+----------+
+	| name     |
+	+----------+
+	| ZHANGSAN |
+	| LISI     |
+	| WANGWU   |
+	| JACK_SON |
+	+----------+
+	
+	substr 取子串（substr( 被截取的字符串, 起始下标,截取的长度)）
+	select substr(ename, 1, 1) as ename from emp;
+	注意：起始下标从1开始，没有0.
+	找出员工名字第一个字母是A的员工信息？
+	第一种方式：模糊查询 select ename from emp where ename like 'A%';
+	第二种方式：substr函数
+	select ename from emp where substr(ename,1,1) = 'A';
+	
+	首字母大写？
+	select concat(upper(substr(name,1,1)),substr(name,2,length(name) - 1)) as result from t_student;
+	+----------+
+	| result   |
+	+----------+
+	| Zhangsan |
+	| Lisi     |
+	| Wangwu   |
+	| Jack_son |
+	+----------+
+	
+	concat函数进行字符串的拼接
+	select concat(empno,ename) from emp;
+	+---------------------+
+	| concat(empno,ename) |
+	+---------------------+
+	| 7369SMITH           |
+	| 7499ALLEN           |
+	| 7521WARD            |
+	| 7566JONES           |
+	| 7654MARTIN          |
+	| 7698BLAKE           |
+	| 7782CLARK           |
+	| 7788SCOTT           |
+	| 7839KING            |
+	| 7844TURNER          |
+	| 7876ADAMS           |
+	| 7900JAMES           |
+	| 7902FORD            |
+	| 7934MILLER          |
+	+---------------------+
+	
+	length 取长度
+	select length(ename) enamelength from emp;
+	+-------------+
+	| enamelength |
+	+-------------+
+	|           5 |
+	|           5 |
+	|           4 |
+	|           5 |
+	|           6 |
+	|           5 |
+	|           5 |
+	|           5 |
+	|           4 |
+	|           6 |
+	|           5 |
+	|           5 |
+	|           4 |
+	|           6 |
+	+-------------+
+	
+	trim 去空格
+	select * from emp where ename = '  KING';
+	Empty set (0.00 sec)
+	select * from emp where ename = trim('   KING');
+	+-------+-------+-----------+------+------------+---------+------+--------+
+	| EMPNO | ENAME | JOB       | MGR  | HIREDATE   | SAL     | COMM | DEPTNO |
+	+-------+-------+-----------+------+------------+---------+------+--------+
+	|  7839 | KING  | PRESIDENT | NULL | 1981-11-17 | 5000.00 | NULL |     10 |
+	+-------+-------+-----------+------+------------+---------+------+--------+
+	
+	str_to_date 将字符串转换成日期
+	date_format 格式化日期
+	format 设置千分位
+	
+	case..when..then..when..then..else..end
+	当员工的工作岗位是MANAGER的时候，工资上调10%，当工作岗位是SALESMAN的时候，工资上调50%,其它正常。
+	（注意：不修改数据库，只是将查询结果显示为工资上调）
+	select ename,job, sal as oldsal,(case job when 'MANAGER' then sal*1.1 when 'SALESMAN' then sal*1.5 else sal end) as newsal from emp;
+	+--------+-----------+---------+---------+
+	| ename  | job       | oldsal  | newsal  |
+	+--------+-----------+---------+---------+
+	| SMITH  | CLERK     |  800.00 |  800.00 |
+	| ALLEN  | SALESMAN  | 1600.00 | 2400.00 |
+	| WARD   | SALESMAN  | 1250.00 | 1875.00 |
+	| JONES  | MANAGER   | 2975.00 | 3272.50 |
+	| MARTIN | SALESMAN  | 1250.00 | 1875.00 |
+	| BLAKE  | MANAGER   | 2850.00 | 3135.00 |
+	| CLARK  | MANAGER   | 2450.00 | 2695.00 |
+	| SCOTT  | ANALYST   | 3000.00 | 3000.00 |
+	| KING   | PRESIDENT | 5000.00 | 5000.00 |
+	| TURNER | SALESMAN  | 1500.00 | 2250.00 |
+	| ADAMS  | CLERK     | 1100.00 | 1100.00 |
+	| JAMES  | CLERK     |  950.00 |  950.00 |
+	| FORD   | ANALYST   | 3000.00 | 3000.00 |
+	| MILLER | CLERK     | 1300.00 | 1300.00 |
+	+--------+-----------+---------+---------+
+	
+	round 四舍五入
+	
+	select 'abc' from emp; // select后面直接跟“字面量/字面值”
+	
+	select 'abc' as bieming from emp;
+	+---------+
+	| bieming |
+	+---------+
+	| abc     |
+	| abc     |
+	| abc     |
+	| abc     |
+	| abc     |
+	| abc     |
+	| abc     |
+	| abc     |
+	| abc     |
+	| abc     |
+	| abc     |
+	| abc     |
+	| abc     |
+	| abc     |
+	+---------+
+	
+	select abc from emp;
+	ERROR 1054 (42S22): Unknown column 'abc' in 'field list'
+	这样肯定报错，因为会把abc当做一个字段的名字，去emp表中找abc字段去了。
+	
+	结论：select后面可以跟某个表的字段名（可以等同看做变量名），也可以跟字面量/字面值（数据）。
+	select round(1236.567, 0) as result from emp; //保留整数位。
+	+--------+
+	| result |
+	+--------+
+	|   1237 |
+	|   1237 |
+	|   1237 |
+	|   1237 |
+	|   1237 |
+	|   1237 |
+	|   1237 |
+	|   1237 |
+	|   1237 |
+	|   1237 |
+	|   1237 |
+	|   1237 |
+	|   1237 |
+	|   1237 |
+	+--------+
+	
+	select round(1236.567, 1) as result from emp; //保留1个小数
+	select round(1236.567, 2) as result from emp; //保留2个小数
+	select round(1236.567, -1) as result from emp; // 保留到十位。
+	+--------+
+	| result |
+	+--------+
+	|   1240 |
+	|   1240 |
+	|   1240 |
+	|   1240 |
+	|   1240 |
+	|   1240 |
+	|   1240 |
+	|   1240 |
+	|   1240 |
+	|   1240 |
+	|   1240 |
+	|   1240 |
+	|   1240 |
+	|   1240 |
+	+--------+
+	
+	rand() 生成随机数
+	select round(rand()*100,0) from emp; // 100以内的随机数
+	+---------------------+
+	| round(rand()*100,0) |
+	+---------------------+
+	|                  76 |
+	|                  29 |
+	|                  15 |
+	|                  88 |
+	|                  95 |
+	|                   9 |
+	|                  63 |
+	|                  89 |
+	|                  54 |
+	|                   3 |
+	|                  54 |
+	|                  61 |
+	|                  42 |
+	|                  28 |
+	+---------------------+
+	
+	ifnull 是空处理函数。专门处理空的。可以将 null 转换成一个具体值
+	在所有数据库当中，只要有NULL参与的数学运算，最终结果就是NULL。
+	select ename, sal + comm as salcomm from emp;
+	+--------+---------+
+	| ename  | salcomm |
+	+--------+---------+
+	| SMITH  |    NULL |
+	| ALLEN  | 1900.00 |
+	| WARD   | 1750.00 |
+	| JONES  |    NULL |
+	| MARTIN | 2650.00 |
+	| BLAKE  |    NULL |
+	| CLARK  |    NULL |
+	| SCOTT  |    NULL |
+	| KING   |    NULL |
+	| TURNER | 1500.00 |
+	| ADAMS  |    NULL |
+	| JAMES  |    NULL |
+	| FORD   |    NULL |
+	| MILLER |    NULL |
+	+--------+---------+
+	
+	为了避免这个现象，需要使用ifnull函数。
+	ifnull函数用法：ifnull(数据, 被当做哪个值)
+	补助为NULL的时候，将补助当做0
+	select ename, (sal + ifnull(comm, 0)) * 12 as yearsal from emp;
+	+--------+----------+
+	| ename  | yearsal  |
+	+--------+----------+
+	| SMITH  |  9600.00 |
+	| ALLEN  | 22800.00 |
+	| WARD   | 21000.00 |
+	| JONES  | 35700.00 |
+	| MARTIN | 31800.00 |
+	| BLAKE  | 34200.00 |
+	| CLARK  | 29400.00 |
+	| SCOTT  | 36000.00 |
+	| KING   | 60000.00 |
+	| TURNER | 18000.00 |
+	| ADAMS  | 13200.00 |
+	| JAMES  | 11400.00 |
+	| FORD   | 36000.00 |
+	| MILLER | 15600.00 |
+	+--------+----------+
+
+## 17、分组函数（多行处理函数）
+
+	多行处理函数的特点：输入多行，最终输出一行。
+	count计数
+	sum求和
+	avg平均值
+	max最大值
+	min最小值
+	
+	注意：
+	分组函数在使用的时候必须先进行分组，然后才能用。如果你没有对数据进行分组，整张表默认为一组。
+	
+	找出最高工资？
+	select max(sal) from emp;
+	+----------+
+	| max(sal) |
+	+----------+
+	|  5000.00 |
+	+----------+
+	
+	找出最低工资？
+	select min(sal) from emp;
+	+----------+
+	| min(sal) |
+	+----------+
+	|   800.00 |
+	+----------+
+	
+	计算工资和：
+	select sum(sal) from emp;
+	+----------+
+	| sum(sal) |
+	+----------+
+	| 29025.00 |
+	+----------+
+	
+	计算平均工资：
+	select avg(sal) from emp;
+	+-------------+
+	| avg(sal)    |
+	+-------------+
+	| 2073.214286 |
+	+-------------+
+	14个工资全部加起来，然后除以14。
+	
+	计算员工数量？
+	select count(ename) from emp;
+	+--------------+
+	| count(ename) |
+	+--------------+
+	|           14 |
+	+--------------+
+	
+	分组函数在使用的时候需要注意哪些？
+	第一点：分组函数自动忽略NULL，你不需要提前对NULL进行处理。
+	select sum(comm) from emp;
+	+-----------+
+	| sum(comm) |
+	+-----------+
+	|   2200.00 |
+	+-----------+
+	select count(comm) from emp;
+	+-------------+
+	| count(comm) |
+	+-------------+
+	|           4 |
+	+-------------+
+	select avg(comm) from emp;
+	+------------+
+	| avg(comm)  |
+	+------------+
+	| 550.000000 |
+	+------------+
+	
+	第二点：分组函数中count(*)和count(具体字段)有什么区别？
+	select count(*) from emp;
+	+----------+
+	| count(*) |
+	+----------+
+	|       14 |
+	+----------+
+	select count(comm) from emp;
+	+-------------+
+	| count(comm) |
+	+-------------+
+	|           4 |
+	+-------------+
+	count(具体字段)：表示统计该字段下所有不为NULL的元素的总数。
+	count(*)：统计表当中的总行数。（只要有一行数据count则++）
+	因为每一行记录不可能都为NULL，一行数据中有一列不为NULL，则这行数据就是有效的。
+	
+	第三点：分组函数不能够直接使用在where子句中。
+	找出比最低工资高的员工信息。
+	select ename,sal from emp where sal > min(sal);
+	表面上没问题，运行一下？
+	ERROR 1111 (HY000): Invalid use of group function
+	?????????????????????????????????????????????????????????????????????
+	说完分组查询(group by)之后就明白了了。
+	
+	第四点：所有的分组函数可以组合起来一起用。
+	select sum(sal),min(sal),max(sal),avg(sal),count(*) from emp;
+	+----------+----------+----------+-------------+----------+
+	| sum(sal) | min(sal) | max(sal) | avg(sal)    | count(*) |
+	+----------+----------+----------+-------------+----------+
+	| 29025.00 |   800.00 |  5000.00 | 2073.214286 |       14 |
+	+----------+----------+----------+-------------+----------+
+
+## 18、分组查询
+
+	在实际的应用中，可能有这样的需求，需要先进行分组，然后对每一组的数据进行操作。
+	这个时候我们需要使用分组查询，怎么进行分组查询呢？select...from...group by...
+	
+	计算每个部门的工资和？
+	计算每个工作岗位的平均薪资？
+	找出每个工作岗位的最高薪资？
+	....
+	
+	select
+	...
+	from
+	...
+	where
+	...
+	group by
+	...
+	order by
+	...
+	以上关键字的书写顺序不能颠倒，需要记忆。
+	执行顺序是什么？
+	1. from
+	2. where
+	3. group by
+	4. select
+	5. order by
+	
+	为什么分组函数不能直接使用在where后面？
+	select ename,sal from emp where sal > min(sal);//报错。
+	因为分组函数在使用的时候必须先分组之后才能使用。
+	where执行的时候，还没有进行过分组操作group by，所以where后面不能出现分组函数。
+	select sum(sal) from emp; 
+	这个没有分组，为啥sum()函数可以用呢？
+	因为select在group by之后执行。
+	
+	找出每个工作岗位的工资和？
+	实现思路：按照工作岗位分组，然后对工资求和。
+	select job,sum(sal) from emp group by job;
+	
+	+-----------+----------+
+	| job       | sum(sal) |
+	+-----------+----------+
+	| ANALYST   |  6000.00 |
+	| CLERK     |  4150.00 |
+	| MANAGER   |  8275.00 |
+	| PRESIDENT |  5000.00 |
+	| SALESMAN  |  5600.00 |
+	+-----------+----------+
+	以上这个语句的执行顺序？
+	先从emp表中查询数据。
+	根据job字段进行分组。
+	然后对每一组的数据进行sum(sal)
+	
+	select ename,job,sum(sal) from emp group by job;
+	ERROR 1055 (42000): Expression #1 of SELECT list is not in GROUP BY clause and contains nonaggregated column 'mayjaneboy.emp.ENAME' which is not functionally dependent on columns in GROUP BY clause; this is incompatible with sql_mode=only_full_group_by
+	重点结论：
+	在一条select语句当中，如果有group by语句的话，select后面只能跟 参加分组的字段，以及分组函数。其它的一律不能跟。
+	
+	找出每个部门的最高薪资
+	实现思路是什么？按照部门编号分组，求每一组的最大值。
+	select deptno,max(sal) from emp group by deptno;
+	+--------+----------+
+	| deptno | max(sal) |
+	+--------+----------+
+	|     10 |  5000.00 |
+	|     20 |  3000.00 |
+	|     30 |  2850.00 |
+	+--------+----------+
+	
+	找出“每个部门，不同工作岗位”的最高薪资？
+	两个字段联合成1个字段看。（两个字段联合分组，也就是比一个字段分组更细）
+	select deptno, job, max(sal) from emp group by deptno, job;
+	+--------+-----------+----------+
+	| deptno | job       | max(sal) |
+	+--------+-----------+----------+
+	|     10 | CLERK     |  1300.00 |
+	|     10 | MANAGER   |  2450.00 |
+	|     10 | PRESIDENT |  5000.00 |
+	|     20 | ANALYST   |  3000.00 |
+	|     20 | CLERK     |  1100.00 |
+	|     20 | MANAGER   |  2975.00 |
+	|     30 | CLERK     |   950.00 |
+	|     30 | MANAGER   |  2850.00 |
+	|     30 | SALESMAN  |  1600.00 |
+	+--------+-----------+----------+
+	
+	使用having可以对分完组之后的数据进一步过滤。
+	having不能单独使用，having不能代替where，having必须和group by联合使用。
+	
+	找出每个部门最高薪资，要求显示最高薪资大于3000的？
+	第一步：找出每个部门最高薪资 按照部门编号分组，求每一组最大值。
+	select deptno,max(sal) from emp group by deptno;
+	第二步：要求显示最高薪资大于3000
+	select deptno,max(sal) from emp group by deptno having max(sal) > 3000;
+	+--------+----------+
+	| deptno | max(sal) |
+	+--------+----------+
+	|     10 |  5000.00 |
+	+--------+----------+
+	
+	思考一个问题：以上的sql语句执行效率是不是低？
+	比较低，实际上可以这样考虑：先将大于3000的都找出来，然后再分组。
+	select deptno,max(sal) from emp where sal > 3000 group by deptno;
+	+--------+----------+
+	| deptno | max(sal) |
+	+--------+----------+
+	|     10 |  5000.00 |
+	+--------+----------+
+	
+	优化策略：
+	where和having，优先选择where，where实在完成不了了，再选择having。
+	
+	where没办法的？？？？（where中不能出现分组函数）
+	找出每个部门平均薪资，要求显示平均薪资高于2500的
+	第一步：找出每个部门平均薪资
+	select deptno,avg(sal) from emp group by deptno;
+	+--------+-------------+
+	| deptno | avg(sal)    |
+	+--------+-------------+
+	|     10 | 2916.666667 |
+	|     20 | 2175.000000 |
+	|     30 | 1566.666667 |
+	+--------+-------------+
+	第二步：要求显示平均薪资高于2500的
+	select deptno,avg(sal) from emp where avg(sal) > 2500 group by deptno;
+	ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'where avg(sal) > 2500' at line 1
+	
+	select deptno,avg(sal) from emp group by deptno having avg(sal) > 2500;
+	+--------+-------------+
+	| deptno | avg(sal)    |
+	+--------+-------------+
+	|     10 | 2916.666667 |
+	+--------+-------------+
+	除MANAGER之外，找出每个岗位的平均薪资，要求显示平均薪资大于1500的，按照平均薪资降序排。
+	select job, avg(sal) as avgsal from emp where job <> 'MANAGER' group by job having avg(sal) > 1500 order by avgsal desc;
+	+-----------+-------------+
+	| job       | avgsal      |
+	+-----------+-------------+
+	| PRESIDENT | 5000.000000 |
+	| ANALYST   | 3000.000000 |
+	+-----------+-------------+
+
+## 19、查询结果去除重复记录
+
+注意：原表数据不会被修改，只是查询结果去重。去重需要使用一个关键字：distinct
+
+```
+select distinct job from emp;
++-----------+
+| job       |
++-----------+
+| CLERK     |
+| SALESMAN  |
+| MANAGER   |
+| ANALYST   |
+| PRESIDENT |
++-----------+
+
+select ename,distinct job from emp;
+// 这样编写是错误的，语法错误。
+// distinct只能出现在所有字段的最前方。
+// distinct出现在job,deptno两个字段之前，表示两个字段联合起来去重。
+select distinct job,deptno from emp;
++-----------+--------+
+| job       | deptno |
++-----------+--------+
+| CLERK     |     20 |
+| SALESMAN  |     30 |
+| MANAGER   |     20 |
+| MANAGER   |     30 |
+| MANAGER   |     10 |
+| ANALYST   |     20 |
+| PRESIDENT |     10 |
+| CLERK     |     30 |
+| CLERK     |     10 |
++-----------+--------+
+
+统计一下工作岗位的数量？
+select count(distinct job) from emp;
++---------------------+
+| count(distinct job) |
++---------------------+
+|                   5 |
++---------------------+
+```
+
+## 20、连接查询
+
+emp表和dept表联合起来查询数据，从emp表中取员工名字，从dept表中取部门名字。这种跨表查询，多张表联合起来查询数据，被称为连接查询。
+
+### 20.1、连接查询的分类
+
+```
+根据表连接的方式分类：
+内连接：
+ 等值连接
+ 非等值连接
+ 自连接
+外连接：
+ 左外连接（左连接）
+ 右外连接（右连接）
+ 全连接（不讲）
+```
+
+### 20.2、连接表时，没有任何条件限制？
+
+```
+案例：查询每个员工所在部门名称？
+select ename,deptno from emp;
++--------+--------+
+| ename  | deptno |
++--------+--------+
+| SMITH  |     20 |
+| ALLEN  |     30 |
+| WARD   |     30 |
+| JONES  |     20 |
+| MARTIN |     30 |
+| BLAKE  |     30 |
+| CLARK  |     10 |
+| SCOTT  |     20 |
+| KING   |     10 |
+| TURNER |     30 |
+| ADAMS  |     20 |
+| JAMES  |     30 |
+| FORD   |     20 |
+| MILLER |     10 |
++--------+--------+
+select * from dept;
++--------+------------+----------+
+| DEPTNO | DNAME      | LOC      |
++--------+------------+----------+
+|     10 | ACCOUNTING | NEW YORK |
+|     20 | RESEARCH   | DALLAS   |
+|     30 | SALES      | CHICAGO  |
+|     40 | OPERATIONS | BOSTON   |
++--------+------------+----------+
+
+两张表连接没有任何条件限制：
+select ename,dname from emp, dept;
++--------+------------+
+| ename  | dname      |
++--------+------------+
+| SMITH  | ACCOUNTING |
+| SMITH  | RESEARCH   |
+| SMITH  | SALES      |
+| SMITH  | OPERATIONS |
+| ALLEN  | ACCOUNTING |
+| ALLEN  | RESEARCH   |
+| ALLEN  | SALES      |
+| ALLEN  | OPERATIONS |
+...
+56 rows in set (0.00 sec)
+14 * 4 = 56
+当两张表进行连接查询，没有任何条件限制的时候，最终查询结果条数，是两张表数据条数的乘积。
+
+怎么避免；连接表时加条件，满足条件的数据才被筛选出来！
+select e.ename,d.dname from emp e, dept d where e.deptno = d.deptno;//多表连接时最好起别名以区分
++--------+------------+
+| ename  | dname      |
++--------+------------+
+| CLARK  | ACCOUNTING |
+| KING   | ACCOUNTING |
+| MILLER | ACCOUNTING |
+| SMITH  | RESEARCH   |
+| JONES  | RESEARCH   |
+| SCOTT  | RESEARCH   |
+| ADAMS  | RESEARCH   |
+| FORD   | RESEARCH   |
+| ALLEN  | SALES      |
+| WARD   | SALES      |
+| MARTIN | SALES      |
+| BLAKE  | SALES      |
+| TURNER | SALES      |
+| JAMES  | SALES      |
++--------+------------+
+思考：最终查询的结果条数是14条，但是匹配的过程中，匹配的次数减少了吗？
+还是56次，只不过进行了四选一。次数没有减少。
+表的连接次数越多效率越低，尽量避免表的连接
+```
+
+### 20.3、等值连接。
+
+条件是等量关系，所以被称为等值连接。
+
+```
+查询每个员工所在部门名称，显示员工名和部门名？
+select e.ename,d.dname from emp e, dept d where e.deptno = d.deptno;//SQL92语法
+select e.ename,d.dname from emp e inner join dept d on e.deptno = d.deptno; //SQL99语法（推荐）
+//inner可以省略（带着inner可读性更好！！！一眼就能看出来是内连接）
+SQL99优点：表连接的条件是独立的，连接之后，如果还需要进一步筛选，再往后继续添加where
+
+SQL99语法：
+select ...from a join b on a和b的连接条件 where 筛选条件
+```
+
+### 20.4、非等值连接
+
+条件不是一个等量关系，称为非等值连接。
+
+```
+找出每个员工的薪资等级，要求显示员工名、薪资、薪资等级？
+select e.ename, e.sal, s.grade from emp e join salgrade s on e.sal between s.losal and s.hisal; 
++--------+---------+-------+
+| ename  | sal     | grade |
++--------+---------+-------+
+| SMITH  |  800.00 |     1 |
+| ALLEN  | 1600.00 |     3 |
+| WARD   | 1250.00 |     2 |
+| JONES  | 2975.00 |     4 |
+| MARTIN | 1250.00 |     2 |
+| BLAKE  | 2850.00 |     4 |
+| CLARK  | 2450.00 |     4 |
+| SCOTT  | 3000.00 |     4 |
+| KING   | 5000.00 |     5 |
+| TURNER | 1500.00 |     3 |
+| ADAMS  | 1100.00 |     1 |
+| JAMES  |  950.00 |     1 |
+| FORD   | 3000.00 |     4 |
+| MILLER | 1300.00 |     2 |
++--------+---------+-------+
+```
+
+### 20.5、自连接
+
+```
+查询员工的上级领导，要求显示员工名和对应的领导名？技巧：一张表看成两张表。
+select empno,ename,mgr from emp;
++-------+--------+------+
+| empno | ename  | mgr  |
++-------+--------+------+
+|  7369 | SMITH  | 7902 |
+|  7499 | ALLEN  | 7698 |
+|  7521 | WARD   | 7698 |
+|  7566 | JONES  | 7839 |
+|  7654 | MARTIN | 7698 |
+|  7698 | BLAKE  | 7839 |
+|  7782 | CLARK  | 7839 |
+|  7788 | SCOTT  | 7566 |
+|  7839 | KING   | NULL |
+|  7844 | TURNER | 7698 |
+|  7876 | ADAMS  | 7788 |
+|  7900 | JAMES  | 7698 |
+|  7902 | FORD   | 7566 |
+|  7934 | MILLER | 7782 |
++-------+--------+------+
+select a.ename as '员工名', b.ename as '领导名' from emp a join emp b on a.mgr = b.empno; //员工的领导编号 = 领导的员工编号
++--------+--------+
+| 员工名  |  领导名 |
++--------+--------+
+| SMITH  | FORD   |
+| ALLEN  | BLAKE  |
+| WARD   | BLAKE  |
+| JONES  | KING   |
+| MARTIN | BLAKE  |
+| BLAKE  | KING   |
+| CLARK  | KING   |
+| SCOTT  | JONES  |
+| TURNER | BLAKE  |
+| ADAMS  | SCOTT  |
+| JAMES  | BLAKE  |
+| FORD   | JONES  |
+| MILLER | CLARK  |
++--------+--------+
+13 rows in set (0.00 sec)
+13条记录，没有KING
+```
+
+### 20.6、外连接
+
+内连接 A和B连接，AB两张表没有主次关系。平等的。
+
+```
+select e.ename,d.dname from emp e join dept d on e.deptno = d.deptno; //特点：能够完全复合连接条件的数据才被筛选出来
++--------+------------+
+| ename  | dname      |
++--------+------------+
+| CLARK  | ACCOUNTING |
+| KING   | ACCOUNTING |
+| MILLER | ACCOUNTING |
+| SMITH  | RESEARCH   |
+| JONES  | RESEARCH   |
+| SCOTT  | RESEARCH   |
+| ADAMS  | RESEARCH   |
+| FORD   | RESEARCH   |
+| ALLEN  | SALES      |
+| WARD   | SALES      |
+| MARTIN | SALES      |
+| BLAKE  | SALES      |
+| TURNER | SALES      |
+| JAMES  | SALES      |
++--------+------------+
+```
+
+外连接（右外连接）：
+
+```
+select e.ename,d.dname from emp e right outer join dept d on e.deptno = d.deptno;//outer可以省略，带着可读性强。
++--------+------------+
+| ename  | dname      |
++--------+------------+
+| MILLER | ACCOUNTING |
+| KING   | ACCOUNTING |
+| CLARK  | ACCOUNTING |
+| FORD   | RESEARCH   |
+| ADAMS  | RESEARCH   |
+| SCOTT  | RESEARCH   |
+| JONES  | RESEARCH   |
+| SMITH  | RESEARCH   |
+| JAMES  | SALES      |
+| TURNER | SALES      |
+| BLAKE  | SALES      |
+| MARTIN | SALES      |
+| WARD   | SALES      |
+| ALLEN  | SALES      |
+| NULL   | OPERATIONS |
++--------+------------+
+15 rows in set (0.00 sec)
+right表示将join右边的表dept看成主表，以这张表的数据为主，根据连接条件查询次表emp。主表中有而次表中没有对应的数据也会被查询出来
+```
+
+外连接（左外连接）
+
+```
+select e.ename,d.dname from emp e left join dept d on e.deptno = d.deptno;
++--------+------------+
+| ename  | dname      |
++--------+------------+
+| SMITH  | RESEARCH   |
+| ALLEN  | SALES      |
+| WARD   | SALES      |
+| JONES  | RESEARCH   |
+| MARTIN | SALES      |
+| BLAKE  | SALES      |
+| CLARK  | ACCOUNTING |
+| SCOTT  | RESEARCH   |
+| KING   | ACCOUNTING |
+| TURNER | SALES      |
+| ADAMS  | RESEARCH   |
+| JAMES  | SALES      |
+| FORD   | RESEARCH   |
+| MILLER | ACCOUNTING |
++--------+------------+
+14 rows in set (0.00 sec)
+```
+
+外连接的查询结果条数一定 >= 内连接的查询结果条数
+
+### 20.7、多表连接
+
+```
+select ...from a join b on a和b的连接条件 join c on a和c的连接条件 right join d on a和d的连接条件
+内连接和外连接可以混合出现
+
+找出每个员工的部门名称以及工资等级，要求显示员工名、部门名、薪资、薪资等级？
+select e.ename,e.sal,d.dname,s.grade from emp e join dept d on e.deptno = d.deptno join salgrade s on e.sal between s.losal and s.hisal;
++--------+---------+------------+-------+
+| ename  | sal     | dname      | grade |
++--------+---------+------------+-------+
+| SMITH  |  800.00 | RESEARCH   |     1 |
+| ALLEN  | 1600.00 | SALES      |     3 |
+| WARD   | 1250.00 | SALES      |     2 |
+| JONES  | 2975.00 | RESEARCH   |     4 |
+| MARTIN | 1250.00 | SALES      |     2 |
+| BLAKE  | 2850.00 | SALES      |     4 |
+| CLARK  | 2450.00 | ACCOUNTING |     4 |
+| SCOTT  | 3000.00 | RESEARCH   |     4 |
+| KING   | 5000.00 | ACCOUNTING |     5 |
+| TURNER | 1500.00 | SALES      |     3 |
+| ADAMS  | 1100.00 | RESEARCH   |     1 |
+| JAMES  |  950.00 | SALES      |     1 |
+| FORD   | 3000.00 | RESEARCH   |     4 |
+| MILLER | 1300.00 | ACCOUNTING |     2 |
++--------+---------+------------+-------+
+找出每个员工的部门名称以及工资等级，还有上级领导，要求显示员工名、领导名、部门名、薪资、薪资等级？
+select e.ename,e.sal,d.dname,s.grade,l.ename from emp e join dept d on e.deptno = d.deptno join salgrade s on e.sal between s.losal and s.hisal left join emp l on e.mgr = l.empno;
++--------+---------+------------+-------+-------+
+| ename  | sal     | dname      | grade | ename |
++--------+---------+------------+-------+-------+
+| SMITH  |  800.00 | RESEARCH   |     1 | FORD  |
+| ALLEN  | 1600.00 | SALES      |     3 | BLAKE |
+| WARD   | 1250.00 | SALES      |     2 | BLAKE |
+| JONES  | 2975.00 | RESEARCH   |     4 | KING  |
+| MARTIN | 1250.00 | SALES      |     2 | BLAKE |
+| BLAKE  | 2850.00 | SALES      |     4 | KING  |
+| CLARK  | 2450.00 | ACCOUNTING |     4 | KING  |
+| SCOTT  | 3000.00 | RESEARCH   |     4 | JONES |
+| KING   | 5000.00 | ACCOUNTING |     5 | NULL  |
+| TURNER | 1500.00 | SALES      |     3 | BLAKE |
+| ADAMS  | 1100.00 | RESEARCH   |     1 | SCOTT |
+| JAMES  |  950.00 | SALES      |     1 | BLAKE |
+| FORD   | 3000.00 | RESEARCH   |     4 | JONES |
+| MILLER | 1300.00 | ACCOUNTING |     2 | CLARK |
++--------+---------+------------+-------+-------+
+```
+
+## 21、子查询
+
+### 21.1、什么是子查询？
+
+查询语句中嵌套select语句，被嵌套的select语句称为子查询。
+
+### 21.2、子查询都可以出现在哪里呢？
+
+select
+..(select).
+from
+..(select).
+where
+..(select).
+
+### 21.3、where子查询
+
+```
+案例：找出比最低工资高的员工姓名和工资？
+select ename,sal from emp where sal > min(sal);
+ERROR 1111 (HY000): Invalid use of group function
+where子句中不能直接使用分组函数。
+
+实现思路：
+第一步：查询最低工资是多少
+select min(sal) from emp;
++----------+
+| min(sal) |
++----------+
+|   800.00 |
++----------+
+第二步：找出>800的
+select ename,sal from emp where sal > 800;
+
+第三步：合并
+select ename,sal from emp where sal > (select min(sal) from emp);
++--------+---------+
+| ename  | sal     |
++--------+---------+
+| ALLEN  | 1600.00 |
+| WARD   | 1250.00 |
+| JONES  | 2975.00 |
+| MARTIN | 1250.00 |
+| BLAKE  | 2850.00 |
+| CLARK  | 2450.00 |
+| SCOTT  | 3000.00 |
+| KING   | 5000.00 |
+| TURNER | 1500.00 |
+| ADAMS  | 1100.00 |
+| JAMES  |  950.00 |
+| FORD   | 3000.00 |
+| MILLER | 1300.00 |
++--------+---------+
+```
+
+### 21.4、from子句中的子查询
+
+注意：from后面的子查询，可以将子查询的查询结果当做一张临时表。
+
+```
+案例：找出每个岗位的平均工资的薪资等级。
+
+第一步：找出每个岗位的平均工资（按照岗位分组求平均值）
+select job,avg(sal) from emp group by job;
++-----------+-------------+
+| job       | avgsal      |
++-----------+-------------+
+| ANALYST   | 3000.000000 |
+| CLERK     | 1037.500000 |
+| MANAGER   | 2758.333333 |
+| PRESIDENT | 5000.000000 |
+| SALESMAN  | 1400.000000 |
++-----------+-------------+t表
+
+第二步：把以上的查询结果当做一张真实存在的表t。
+select * from salgrade; s表
++-------+-------+-------+
+| GRADE | LOSAL | HISAL |
++-------+-------+-------+
+|     1 |   700 |  1200 |
+|     2 |  1201 |  1400 |
+|     3 |  1401 |  2000 |
+|     4 |  2001 |  3000 |
+|     5 |  3001 |  9999 |
++-------+-------+-------+
+t表和s表进行表连接，条件：t表avg(sal) between s.losal and s.hisal;
+
+select t.*, s.grade from 
+(select job,avg(sal) as avgsal from emp group by job) t 
+join salgrade s on t.avgsal between s.losal and s.hisal;
++-----------+-------------+-------+
+| job       | avgsal      | grade |
++-----------+-------------+-------+
+| CLERK     | 1037.500000 |     1 |
+| SALESMAN  | 1400.000000 |     2 |
+| ANALYST   | 3000.000000 |     4 |
+| MANAGER   | 2758.333333 |     4 |
+| PRESIDENT | 5000.000000 |     5 |
++-----------+-------------+-------+
+```
+
+### 21.5、select子查询（了解） 
+
+案例：找出每个员工的部门名称，要求显示员工名，部门名？
+
+```
+select e.ename,e.deptno,(select d.dname from dept d where e.deptno = d.deptno) as dname from emp e;
++--------+--------+------------+
+| ename  | deptno | dname      |
++--------+--------+------------+
+| SMITH  |     20 | RESEARCH   |
+| ALLEN  |     30 | SALES      |
+| WARD   |     30 | SALES      |
+| JONES  |     20 | RESEARCH   |
+| MARTIN |     30 | SALES      |
+| BLAKE  |     30 | SALES      |
+| CLARK  |     10 | ACCOUNTING |
+| SCOTT  |     20 | RESEARCH   |
+| KING   |     10 | ACCOUNTING |
+| TURNER |     30 | SALES      |
+| ADAMS  |     20 | RESEARCH   |
+| JAMES  |     30 | SALES      |
+| FORD   |     20 | RESEARCH   |
+| MILLER |     10 | ACCOUNTING |
++--------+--------+------------+
+
+select e.ename,e.deptno,(select dname from dept) as dname from emp e;
+//错误：ERROR 1242 (21000): Subquery returns more than 1 row
+子查询(select dname from dept) as dname返回四条语句
+注意：对于select后面的子查询来说，这个子查询只能一次返回1条结果，多于1条，就报错了。！
+```
+
+## 22、union合并查询结果集
+
+```
+案例：查询工作岗位是MANAGER和SALESMAN的员工？
+select ename,job from emp where job = 'MANAGER' or job = 'SALESMAN';
+select ename,job from emp where job in('MANAGER','SALESMAN');
++--------+----------+
+| ename  | job      |
++--------+----------+
+| ALLEN  | SALESMAN |
+| WARD   | SALESMAN |
+| JONES  | MANAGER  |
+| MARTIN | SALESMAN |
+| BLAKE  | MANAGER  |
+| CLARK  | MANAGER  |
+| TURNER | SALESMAN |
++--------+----------+
+select ename,job from emp where job = 'MANAGER'
+union
+select ename,job from emp where job = 'SALESMAN';
++--------+----------+
+| ename  | job      |
++--------+----------+
+| JONES  | MANAGER  |
+| BLAKE  | MANAGER  |
+| CLARK  | MANAGER  |
+| ALLEN  | SALESMAN |
+| WARD   | SALESMAN |
+| MARTIN | SALESMAN |
+| TURNER | SALESMAN |
++--------+----------+
+union的效率要高一些。对于表连接来说，每连接一次新表，则匹配的次数满足笛卡尔积。但是union可以减少匹配的次数。在减少匹配次数的情况下，还可以完成两个结果集的拼接。
+
+a 连接 b 连接 c
+a 10条记录
+b 10条记录
+c 10条记录
+匹配次数是：1000
+a 连接 b一个结果：10 * 10 --> 100次
+a 连接 c一个结果：10 * 10 --> 100次
+使用union的话是：100次 + 100次 = 200次。（union把乘法变成了加法运算）
+```
+
+union在使用的时候有注意事项吗？
+
+```
+select ename,job from emp where job = 'MANAGER'
+union
+select ename from emp where job = 'SALESMAN';
+//错误的：union在进行结果集合并的时候，要求两个结果集的列数相同。
+
+select ename,job from emp where job = 'MANAGER'
+union
+select ename,sal from emp where job = 'SALESMAN';
+// MYSQL可以，oracle语法严格 ，不可以，报错。要求：结果集合并时列和列的数据类型也要一致。
++--------+---------+
+| ename  | job     |
++--------+---------+
+| JONES  | MANAGER |
+| BLAKE  | MANAGER |
+| CLARK  | MANAGER |
+| ALLEN  | 1600    |
+| WARD   | 1250    |
+| MARTIN | 1250    |
+| TURNER | 1500    |
++--------+---------+
+```
+
+## 23、limit（重要）
+
+### 23.1limit作用
+
+将查询结果集的一部分取出来。通常使用在分页查询当中。
+
+百度默认：一页显示10条记录。可以一页一页翻页看。
+
+分页的作用是为了提高用户的体验，因为一次全部都查出来，用户体验差。
+
+### 23.2、limit用法
+
+```
+完整用法：limit startIndex,length startIndex起始下标，length长度。起始下标从0开始。
+缺省用法：limit length; 这是取前5
+
+按照薪资降序，取出排名在前5名的员工？
+select ename,sal from emp order by sal desc limit 5; 
+select ename,sal from emp order by sal desc limit 0,5;
++-------+---------+
+| ename | sal     |
++-------+---------+
+| KING  | 5000.00 |
+| SCOTT | 3000.00 |
+| FORD  | 3000.00 |
+| JONES | 2975.00 |
+| BLAKE | 2850.00 |
++-------+---------+
+注意：mysql当中limit在order by之后执行
+
+取出工资排名在[3-5]名的员工？
+select ename,sal from emp order by sal desc limit 2, 3;
+2表示起始位置从下标2开始，就是第三条记录。3表示长度。
++-------+---------+
+| ename | sal     |
++-------+---------+
+| FORD  | 3000.00 |
+| JONES | 2975.00 |
+| BLAKE | 2850.00 |
++-------+---------+
+```
+
+### 23.3、分页
+
+```
+每页显示3条记录
+第1页：limit 0,3[0 1 2]
+第2页：limit 3,3[3 4 5]
+第3页：limit 6,3[6 7 8]
+第4页：limit 9,3[9 10 11]
+每页显示pageSize条记录
+第pageNo页：limit (pageNo - 1) * pageSize  , pageSize
+
+public static void main(String[] args){
+// 用户提交过来一个页码，以及每页显示的记录条数
+int pageNo = 5; //第5页
+int pageSize = 10; //每页显示10条
+
+int startIndex = (pageNo - 1) * pageSize;
+String sql = "select ...limit " + startIndex + ", " + pageSize;
+}
+```
+
+## 24、DQL语句总结
+
+```
+select 
+...
+from
+...
+where
+...
+group by
+...
+having
+...
+order by
+...
+limit
+...
+执行顺序？
+1.from
+2.where
+3.group by
+4.having
+5.select
+6.order by
+7.limit..
+```
+
